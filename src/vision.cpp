@@ -8,7 +8,6 @@
 
 struct BallInfo_s {
 	double xRads;
-	//double yRads;
 	double dist;
 };
 
@@ -38,12 +37,12 @@ void disposeVision() {
  * @returns Radians from normal based upon pixels from centre of image as a 
  * signed int.
  */
-double pixelsToRads(int pixels, int diamPixels) {
+static double pixelsToRads(int pixels, int diamPixels) {
 	return asin((double)(DIAMETER * pixels) / 
 				(diamPixels * diamPixels * DIST_PIX_RATIO));
 }
 
-double calculateDistance(int diamPixels) {
+static double calculateDistance(int diamPixels) {
 	return (double)diamPixels * DIST_PIX_RATIO;
 }
 
@@ -60,9 +59,10 @@ BallInfo* see() {
 	// Find the "Centre of mass" of the red pixels
 	int area = 0;
 	int xMoment = 0, yMoment = 0;
+	int diameter = 0;	// Used to work out diameter
 	for (int y = 0; y < h; y++) {
+		int run = 0;
 		for (int x = 0; x < w; x++) {
-			// TODO: Calculate diameter
 			unsigned char* blue  = pixelData;
 			unsigned char* green = pixelData + 1;
 			unsigned char* red   = pixelData + 2;
@@ -72,8 +72,13 @@ BallInfo* see() {
 				area = area +1;
 				xMoment = xMoment + x;
 				yMoment = yMoment + y; 
+
+				// Increment the run and set diameter if necessary
+				run++;
+				if (run > diameter)	diameter = run;
 			} else {
 				*red = 0;
+				run = 0;
 			}
 			*blue = 0;
 			*green = 0;
@@ -92,13 +97,21 @@ BallInfo* see() {
 		}*/
 		printf("Ball at (%d, %d)", xPos, yPos);
 		BallInfo* bi = (BallInfo*)malloc(sizeof(BallInfo));
-		// TODO: define static functions
 		bi->xRads = pixelsToRads(xPos, diameter);
-		//bi->yRads = pixelsToRads(yPos);
 		bi->dist = calculateDistance(diameter);
 		return bi;
 	} else {
 		return NULL;
 	}
 	cvwidget->putImage(image);
+}
+
+// Accessor methods //
+
+double getXRadians(BallInfo i) {
+	return i->xRads;
+}
+
+double getBallDistance(BallInfo i) {
+	return i->dist;
 }

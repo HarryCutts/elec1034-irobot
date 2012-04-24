@@ -18,8 +18,6 @@ BallInfo* see();
 
 /** @return The horizontal angle between the ball and the normal from the plane of the webcam. */
 double getXRadians(BallInfo i);
-/** @return The vertical angle between the ball and the normal from the plane of the webcam. */
-double getYRadians(BallInfo i);
 
 /** @return The distance between the ball and the webcam, in metres. */
 double getBallDistance(BallInfo i);

@@ -1,13 +1,16 @@
 #include "../include/vision.h"
 #include <opencv/cv.h>
+#include <opencv/highgui.h>
+#include <stdio.h>
+#include <math.h>
 
 #define NULL 0
 
 struct BallInfo_s {
 	double xRads;
-	double yRads;
+	//double yRads;
 	double dist;
-}
+};
 
 static bool visionInitialised = false;
 static CvCapture* camera;
@@ -28,6 +31,21 @@ void disposeVision() {
 #define RED_MUL		4
 #define BLUEGREEN_MUL	3
 #define AREA_MIN	4000
+#define DIST_PIX_RATIO 23
+#define DIAMETER 56 /**< Diameter of ball in mm. >*/
+
+/**
+ * @returns Radians from normal based upon pixels from centre of image as a 
+ * signed int.
+ */
+double pixelsToRads(int pixels, int diamPixels) {
+	return asin((double)(DIAMETER * pixels) / 
+				(diamPixels * diamPixels * DIST_PIX_RATIO));
+}
+
+double calculateDistance(int diamPixels) {
+	return (double)diamPixels * DIST_PIX_RATIO;
+}
 
 BallInfo* see() {
 	assert(visionInitialised);
@@ -43,7 +61,7 @@ BallInfo* see() {
 	int area = 0;
 	int xMoment = 0, yMoment = 0;
 	for (int y = 0; y < h; y++) {
-		for (int x = 0; i < w; x++) {
+		for (int x = 0; x < w; x++) {
 			// TODO: Calculate diameter
 			unsigned char* blue  = pixelData;
 			unsigned char* green = pixelData + 1;
@@ -59,7 +77,7 @@ BallInfo* see() {
 			}
 			*blue = 0;
 			*green = 0;
-			pixelData = pixelData + c 
+			pixelData = pixelData + c; 
 		}
 	}
 	if (area > AREA_MIN) {
@@ -73,10 +91,10 @@ BallInfo* see() {
 			blue_pixel = blue_pixel + c*w;
 		}*/
 		printf("Ball at (%d, %d)", xPos, yPos);
-		BallInfo* bi = (BallInfo)malloc(sizeof(BallInfo));
+		BallInfo* bi = (BallInfo*)malloc(sizeof(BallInfo));
 		// TODO: define static functions
-		bi->xRads = pixelsToRads(xRads);
-		bi->yRads = pixelsToRads(yRads);
+		bi->xRads = pixelsToRads(xPos, diameter);
+		//bi->yRads = pixelsToRads(yPos);
 		bi->dist = calculateDistance(diameter);
 		return bi;
 	} else {

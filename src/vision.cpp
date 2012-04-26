@@ -5,8 +5,15 @@
 #include <math.h>
 
 int main() {
-	printf("Yodawg");
-	return 0;
+	initVision();
+
+	while (true) {
+		BallInfo* bi = see();
+		
+		if (bi != NULL)
+			printf("X rads: %f, Distance: %f\n", getXRadians(bi),
+												 getBallDistance(bi));
+	}
 }
 
 struct BallInfo_s {
@@ -32,21 +39,29 @@ void disposeVision() {
 #define RED_MIN		128
 #define RED_MUL		4
 #define BLUEGREEN_MUL	3
-#define AREA_MIN	4000
-#define DIST_PIX_RATIO 23
-#define DIAMETER 56 /**< Diameter of ball in mm. >*/
+#define AREA_MIN	4000 // Was 4000
+#define PIX_ANGLE_PROPORTION 0.00244
+#define DIAMETER 20 /**< Diameter of ball in mm (56). >*/
+#define IMAGE_WIDTH 640
+
+static double calculateDistance(int diamPixels) {
+	// This needs calibrating!!!
+	double dist = 40 + (4.46 * (DIAMETER / ( 2 * tan(PIX_ANGLE_PROPORTION * diamPixels) )));
+	
+	//if (dist > 0) return dist;
+	return dist;
+
+}
 
 /**
  * @returns Radians from normal based upon pixels from centre of image as a 
  * signed int.
  */
 static double pixelsToRads(int pixels, int diamPixels) {
-	return asin((double)(DIAMETER * pixels) / 
-				(diamPixels * diamPixels * DIST_PIX_RATIO));
-}
-
-static double calculateDistance(int diamPixels) {
-	return (double)diamPixels * DIST_PIX_RATIO;
+	int relativePixels = pixels - (IMAGE_WIDTH / 2);
+	double length = relativePixels * (DIAMETER / (double)diamPixels);
+	
+	return asin(length/calculateDistance(diamPixels));
 }
 
 BallInfo* see() {

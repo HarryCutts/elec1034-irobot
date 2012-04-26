@@ -4,7 +4,10 @@
 #include <stdio.h>
 #include <math.h>
 
-#define NULL 0
+int main() {
+	printf("Yodawg");
+	return 0;
+}
 
 struct BallInfo_s {
 	double xRads;
@@ -103,15 +106,15 @@ BallInfo* see() {
 	} else {
 		return NULL;
 	}
-	cvwidget->putImage(image);
+	//cvwidget->putImage(image);
 }
 
 // Accessor methods //
 
-double getXRadians(BallInfo i) {
+double getXRadians(BallInfo* i) {
 	return i->xRads;
 }
 
-double getBallDistance(BallInfo i) {
+double getBallDistance(BallInfo* i) {
 	return i->dist;
 }

@@ -12,12 +12,14 @@ void initVision();
  * is no longer required. */
 void disposeVision();
 
+//void attachDebugWindow(VisionDebugWindow* w);
+
 /** @return A pointer to a BallInfo struct containing information on the current position of the ball 
  * relative to the webcam, or NULL if the ball cannot be found. */
 BallInfo* see();
 
 /** @return The horizontal angle between the ball and the normal from the plane of the webcam. */
-double getXRadians(BallInfo i);
+double getXRadians(BallInfo* i);
 
 /** @return The distance between the ball and the webcam, in metres. */
-double getBallDistance(BallInfo i);
+double getBallDistance(BallInfo* i);

@@ -1,5 +1,7 @@
 // robot-comms.h
 
+#include "type.h"
+
 /** Sets the motor speeds to the given values. 
  * @param left	The speed of the left motor, in mm/s. 
  * @param right	The speed of the right motor, in mm/s. */

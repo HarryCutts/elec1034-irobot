@@ -12,5 +12,5 @@ void setMotorSpeeds(s16 right, s16 left);
  * @param radius	The radius of the circle in mms. */
 void setRobotCourse(s16 velocity, s16 radius);
 
-void initRobotComms();
+s32 initRobotComms();
 

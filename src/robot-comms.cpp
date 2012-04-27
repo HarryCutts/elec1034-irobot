@@ -16,7 +16,11 @@
 #define DRIVE_DIRECT (s16)145
 #define DELAY 10 
 
-s32 ser;
+/**
+ * File descriptors.
+ */
+static s32 ser;
+static s32 pipefd[2];
 
 static void delay(s32 ms){
 	struct timespec t;
@@ -25,21 +29,28 @@ static void delay(s32 ms){
 	nanosleep(&t, NULL);
 }
 
-s32 main(){
-	initRobotComms();
-	
-	setMotorSpeeds(250, 250);
-	delay(1000);
-	setMotorSpeeds(250, -250);
-	delay(1000);
-	setRobotCourse(250, 100);
-	delay(1000);
-	setMotorSpeeds(0, 0);
 
-	return 0;
+
+/**
+ * Child program.
+ */
+void serialRun() {
+	u8 nextByte;
+	while(read(pipefd[0],&nextByte,1)>0){
+		assert (write(ser, &nextByte, 1) == 1);
+		delay(DELAY);
+	}
+	close(pipefd[0]);
+	return;
 }
 
-void initRobotComms(){
+void closeSerial(){
+	close(pipefd[1]);
+	wait();
+}
+
+
+void initSerialPort(){
 	//open the serial port
 	ser = open(DEVICE, O_RDWR);
 	assert (ser != -1);
@@ -53,10 +64,26 @@ void initRobotComms(){
 	assert (tcsetattr(ser, TCSANOW, &termsettings) != -1);
 }
 
+s32 initRobotComms(){
+	pid_t cpid;
+
+	// Pipe successful?
+	assert(pipe(pipefd) == 0);
+	
+	assert((cpid = fork()) != -1);
+
+	if (cpid == 0) {
+		close(pipefd[1]); // Close write end.
+		initSerialPort();
+	} else {
+		close(pipefd[0]); // Close read end.
+	}
+
+	return cpid;
+}
+
 static void sendMotorCommand(u8 command, s16 param1, s16 param2){
 	#define PACKET_SIZE 5 
-	
-	u8 commandBytes[PACKET_SIZE];
 	u8 param1High,param1Low,param2High,param2Low;
 	//remove the high 8 bits of each parameter and cast to a u8
 	param1Low=(u8)(param1 & (0x00FF));
@@ -65,13 +92,12 @@ static void sendMotorCommand(u8 command, s16 param1, s16 param2){
 	param1High=(u8)(param1 >> 8);
 	param2High=(u8)(param2 >> 8);
 
-	commandBytes[0]=command;
-	commandBytes[1]=param1High;
-	commandBytes[2]=param1Low;
-	commandBytes[3]=param2High;
-	commandBytes[4]=param2Low;
-
-	assert (write(ser, commandBytes, PACKET_SIZE) == PACKET_SIZE);
+	write(pipefd[1],&command,1);
+	write(pipefd[1],&param1High,1);
+	write(pipefd[1],&param1Low,1);
+	write(pipefd[1],&param2High,1);
+	write(pipefd[1],&param2Low,1);
+	printf("written commands");
 }
 
 void setMotorSpeeds(s16 right, s16 left){
@@ -81,4 +107,40 @@ void setMotorSpeeds(s16 right, s16 left){
 
 void setRobotCourse(s16 velocity, s16 radius){
 	sendMotorCommand(DRIVE,velocity,radius);
+}
+
+
+s32 main(){
+	if (initRobotComms() == 0) {
+		serialRun();
+		printf("Child about to die\n");
+		return 0;
+	} else {
+		/*camera stuff*/
+		printf("Parent about to begin commands\n");
+		setMotorSpeeds(250, 250);
+		delay(1000);
+		setMotorSpeeds(250, -250);
+		delay(1000);
+		setRobotCourse(250, 100);
+		delay(1000);
+		setMotorSpeeds(0, 0);
+		printf("Parent finished - killing child\n");
+		closeSerial();
+		return 0;
+	}
+
+
+
+	/*initRobotComms();
+	
+	setMotorSpeeds(250, 250);
+	delay(1000);
+	setMotorSpeeds(250, -250);
+	delay(1000);
+	setRobotCourse(250, 100);
+	delay(1000);
+	setMotorSpeeds(0, 0);
+
+	return 0;*/
 }

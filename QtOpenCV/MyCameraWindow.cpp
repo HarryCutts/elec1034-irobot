@@ -18,12 +18,12 @@ MyCameraWindow::MyCameraWindow(QWidget *parent) : QWidget(parent) {
 #define AREA_MIN 4000
 
 void MyCameraWindow::timerEvent(QTimerEvent*) {
-    fprintf(stderr, "Calling see()...\n");
     BallInfo* bi = see();
     assert(bi);
     IplImage* image = getDebugImage(bi);
-    fprintf(stderr, "Putting image on form...");
     cvwidget->putImage(image);
-    fprintf(stderr, " done.\n");
+    if (ballFound(bi)) {
+        fprintf(stderr, "Ball found.\t%f x radians,\t%f metres away.\n", getXRadians(bi), getBallDistance(bi));
+    }
 }
 

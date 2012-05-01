@@ -16,11 +16,18 @@
 #define DRIVE_DIRECT (s16)145
 #define DELAY 10 
 
+<<<<<<< HEAD
 /**
  * File descriptors.
  */
 static s32 ser;
 static s32 pipefd[2];
+=======
+//holds the file descriptors for the pipe
+static int pipeToRobot[2];
+
+s32 ser;
+>>>>>>> 6a7eee9f256b703d2fdda66f5defde4f7caf6d13
 
 static void delay(s32 ms){
 	struct timespec t;
@@ -29,6 +36,7 @@ static void delay(s32 ms){
 	nanosleep(&t, NULL);
 }
 
+<<<<<<< HEAD
 
 
 /**
@@ -50,6 +58,32 @@ void closeSerial(){
 }
 
 
+=======
+int initRobotComms(){
+	pid_t process;
+
+	//create a pipe so the parent can send information to the child
+	assert(pipe(pipeToRobot) == 0);
+	//create the child process to deal with the serial port
+	process = fork();
+	//see if we are the parent or child
+	if (current_process == (pid_t) 0){
+		//if we are the child, close the sending end
+		close(pipeToRobot[1]);
+		//initialise the serial port
+		initSerialPort();
+		//transfer information between the serial port and the pipe
+		serialPortController(pipeToRobot[0]);
+		//once the parent closes the pipe, return to the main program, indicating that this child process should exit
+		return 0;
+	} else {
+		close(pipeToRobot[0]);
+		//return 1 to indicate that we are the parent
+		return 1;
+	}	
+}
+
+>>>>>>> 6a7eee9f256b703d2fdda66f5defde4f7caf6d13
 void initSerialPort(){
 	//open the serial port
 	ser = open(DEVICE, O_RDWR);
@@ -64,6 +98,7 @@ void initSerialPort(){
 	assert (tcsetattr(ser, TCSANOW, &termsettings) != -1);
 }
 
+<<<<<<< HEAD
 s32 initRobotComms(){
 	pid_t cpid;
 
@@ -78,6 +113,27 @@ s32 initRobotComms(){
 	} else {
 		close(pipefd[0]); // Close read end.
 	}
+=======
+void serialPortController(int pipeEnd){
+	FILE *streamToRobot;
+	streamToRobot = fdopen(pipeEnd, "r");
+	while ((c=fgetc(streamToRobot)) != EOF) {
+		//write the characters to the serial port
+		assert(write(ser, c, 1) != 1);
+		//wait in between each character so the robot doesn't get confused
+		delay(10);
+	}
+	fclose(streamToRobot);
+	return;
+}
+
+void delay(s32 ms){
+	struct timespec t;
+	t.tv_sec = ms / 1000;
+	t.tv_nsec = (long) (ms % 1000) * 1000000;
+	nanosleep(&t, NULL);
+}
+>>>>>>> 6a7eee9f256b703d2fdda66f5defde4f7caf6d13
 
 	return cpid;
 }

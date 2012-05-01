@@ -1,14 +1,25 @@
-#include "../include/vision.h"
+#include "vision.h"
 #include <opencv/cv.h>
 #include <opencv/highgui.h>
 #include <stdio.h>
 #include <math.h>
 
-#define NULL 0
+/*int main() {
+	initVision();
+
+	while (true) {
+		BallInfo* bi = see();
+		
+		if (bi != NULL)
+			printf("X rads: %f, Distance: %f\n", getXRadians(bi),
+												 getBallDistance(bi));
+	}
+}*/
 
 struct BallInfo_s {
 	double xRads;
 	double dist;
+	IplImage* image;
 };
 
 static bool visionInitialised = false;
@@ -29,26 +40,34 @@ void disposeVision() {
 #define RED_MIN		128
 #define RED_MUL		4
 #define BLUEGREEN_MUL	3
-#define AREA_MIN	4000
-#define DIST_PIX_RATIO 23
-#define DIAMETER 56 /**< Diameter of ball in mm. >*/
+#define AREA_MIN	4000 // Was 4000
+#define PIX_ANGLE_PROPORTION 0.00244
+#define DIAMETER 20 /**< Diameter of ball in mm (56). >*/
+#define IMAGE_WIDTH 640
+
+static double calculateDistance(int diamPixels) {
+	// This needs calibrating!!!
+	double dist = 40 + (4.46 * (DIAMETER / ( 2 * tan(PIX_ANGLE_PROPORTION * diamPixels) )));
+	
+	//if (dist > 0) return dist;
+	return dist;
+
+}
 
 /**
  * @returns Radians from normal based upon pixels from centre of image as a 
  * signed int.
  */
 static double pixelsToRads(int pixels, int diamPixels) {
-	return asin((double)(DIAMETER * pixels) / 
-				(diamPixels * diamPixels * DIST_PIX_RATIO));
-}
-
-static double calculateDistance(int diamPixels) {
-	return (double)diamPixels * DIST_PIX_RATIO;
+	int relativePixels = pixels - (IMAGE_WIDTH / 2);
+	double length = relativePixels * (DIAMETER / (double)diamPixels);
+	
+	return asin(length/calculateDistance(diamPixels));
 }
 
 BallInfo* see() {
 	assert(visionInitialised);
-
+	
 	IplImage* image=cvQueryFrame(camera);
 	unsigned char* pixelData = (unsigned char *)(image->imageData);
 		// pointer to iterate through image->imageData
@@ -99,19 +118,23 @@ BallInfo* see() {
 		BallInfo* bi = (BallInfo*)malloc(sizeof(BallInfo));
 		bi->xRads = pixelsToRads(xPos, diameter);
 		bi->dist = calculateDistance(diameter);
+		bi->image = image;
 		return bi;
 	} else {
 		return NULL;
 	}
-	cvwidget->putImage(image);
 }
 
 // Accessor methods //
 
-double getXRadians(BallInfo i) {
+double getXRadians(BallInfo* i) {
 	return i->xRads;
 }
 
-double getBallDistance(BallInfo i) {
+double getBallDistance(BallInfo* i) {
 	return i->dist;
+}
+
+IplImage* getDebugImage(BallInfo* i) {
+	return i->image;
 }

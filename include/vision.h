@@ -23,6 +23,8 @@ void disposeVision();
  * relative to the webcam, or NULL if the ball cannot be found. */
 BallInfo* see();
 
+bool ballFound(BallInfo* i);
+
 /** @return The horizontal angle between the ball and the normal from the plane of the webcam. */
 double getXRadians(BallInfo* i);
 

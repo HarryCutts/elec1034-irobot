@@ -10,13 +10,14 @@
 	while (true) {
 		BallInfo* bi = see();
 		
-		if (bi != NULL)
+		if (bi->found)
 			printf("X rads: %f, Distance: %f\n", getXRadians(bi),
 												 getBallDistance(bi));
 	}
 }*/
 
 struct BallInfo_s {
+	bool found;
 	double xRads;
 	double dist;
 	IplImage* image;
@@ -109,23 +110,31 @@ BallInfo* see() {
 		int xPos = xMoment/area;
 		int yPos = yMoment/area;
 		// Draw a line on the image showing the x coordinate of the ball
-		/*unsigned char* blue_pixel =  (unsigned char *)(image->imageData) + c*xpos;
+		unsigned char* blue_pixel =  (unsigned char *)(image->imageData) + c*xPos;
 		for (int y = 0; y < h; y++) {
 			* blue_pixel = 255;
 			blue_pixel = blue_pixel + c*w;
-		}*/
+		}
 		printf("Ball at (%d, %d)", xPos, yPos);
 		BallInfo* bi = (BallInfo*)malloc(sizeof(BallInfo));
+		bi->found = true;
 		bi->xRads = pixelsToRads(xPos, diameter);
 		bi->dist = calculateDistance(diameter);
 		bi->image = image;
 		return bi;
 	} else {
-		return NULL;
+		BallInfo* bi = (BallInfo*)malloc(sizeof(BallInfo));
+		bi->found = false;
+		bi->image = image;
+		return bi;
 	}
 }
 
 // Accessor methods //
+
+bool ballFound(BallInfo* i) {
+	return i->found;
+}
 
 double getXRadians(BallInfo* i) {
 	return i->xRads;

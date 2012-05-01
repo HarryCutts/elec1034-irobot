@@ -20,7 +20,7 @@ MyCameraWindow::MyCameraWindow(QWidget *parent) : QWidget(parent) {
 void MyCameraWindow::timerEvent(QTimerEvent*) {
     fprintf(stderr, "Calling see()...\n");
     BallInfo* bi = see();
-    if (bi == NULL) return;
+    assert(bi);
     IplImage* image = getDebugImage(bi);
     fprintf(stderr, "Putting image on form...");
     cvwidget->putImage(image);

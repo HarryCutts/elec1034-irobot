@@ -1,10 +1,10 @@
-#include "../include/vision.h"
+#include "vision.h"
 #include <opencv/cv.h>
 #include <opencv/highgui.h>
 #include <stdio.h>
 #include <math.h>
 
-int main() {
+/*int main() {
 	initVision();
 
 	while (true) {
@@ -14,11 +14,12 @@ int main() {
 			printf("X rads: %f, Distance: %f\n", getXRadians(bi),
 												 getBallDistance(bi));
 	}
-}
+}*/
 
 struct BallInfo_s {
 	double xRads;
 	double dist;
+	IplImage* image;
 };
 
 static bool visionInitialised = false;
@@ -66,7 +67,7 @@ static double pixelsToRads(int pixels, int diamPixels) {
 
 BallInfo* see() {
 	assert(visionInitialised);
-
+	
 	IplImage* image=cvQueryFrame(camera);
 	unsigned char* pixelData = (unsigned char *)(image->imageData);
 		// pointer to iterate through image->imageData
@@ -117,11 +118,11 @@ BallInfo* see() {
 		BallInfo* bi = (BallInfo*)malloc(sizeof(BallInfo));
 		bi->xRads = pixelsToRads(xPos, diameter);
 		bi->dist = calculateDistance(diameter);
+		bi->image = image;
 		return bi;
 	} else {
 		return NULL;
 	}
-	//cvwidget->putImage(image);
 }
 
 // Accessor methods //
@@ -132,4 +133,8 @@ double getXRadians(BallInfo* i) {
 
 double getBallDistance(BallInfo* i) {
 	return i->dist;
+}
+
+IplImage* getDebugImage(BallInfo* i) {
+	return i->image;
 }

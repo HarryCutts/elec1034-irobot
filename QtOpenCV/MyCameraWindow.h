@@ -16,7 +16,7 @@ class MyCameraWindow : public QWidget
         CvCapture *camera;
         
     public:
-        MyCameraWindow(CvCapture *cam, QWidget *parent=0);
+        MyCameraWindow(QWidget *parent=0);
          
     protected:
         void timerEvent(QTimerEvent*);        

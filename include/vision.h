@@ -1,5 +1,10 @@
 // vision.h
 
+#ifndef VISION_H
+#define VISION_H
+
+#include <opencv/cv.h>
+
 struct BallInfo_s;
 
 /** Contains data on the position of the ball relative to the robot. */
@@ -23,3 +28,7 @@ double getXRadians(BallInfo* i);
 
 /** @return The distance between the ball and the webcam, in metres. */
 double getBallDistance(BallInfo* i);
+
+IplImage* getDebugImage(BallInfo* i);
+
+#endif

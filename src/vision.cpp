@@ -26,9 +26,18 @@ struct BallInfo_s {
 static bool visionInitialised = false;
 static CvCapture* camera;
 
-void initVision() {
+static int GREEN_MIN = 128;
+static int GREEN_MUL = 4;
+static int REDBLUE_MUL = 3;
+static int AREA_MIN = 4000;
+static int DIST_PIX_RATIO = 22;
+static int DIAMETER = 56; /**< Diameter of ball in mm. >*/
+static int IMAGE_WIDTH = 800;
+
+void initVision(int dist_pix_ratio) {
 	camera = cvCreateCameraCapture(0);
 	assert(camera != NULL);
+	DIST_PIX_RATIO = dist_pix_ratio;
 	visionInitialised = true;
 }
 
@@ -38,21 +47,8 @@ void disposeVision() {
 	visionInitialised = true;
 }
 
-#define RED_MIN		128
-#define RED_MUL		4
-#define BLUEGREEN_MUL	3
-#define AREA_MIN	4000 // Was 4000
-#define PIX_ANGLE_PROPORTION 0.00244
-#define DIAMETER 20 /**< Diameter of ball in mm (56). >*/
-#define IMAGE_WIDTH 640
-
 static double calculateDistance(int diamPixels) {
-	// This needs calibrating!!!
-	double dist = 40 + (4.46 * (DIAMETER / ( 2 * tan(PIX_ANGLE_PROPORTION * diamPixels) )));
-	
-	//if (dist > 0) return dist;
-	return dist;
-
+	return DIST_PIX_RATIO / (float) diamPixels;
 }
 
 /**
@@ -86,9 +82,9 @@ BallInfo* see() {
 			unsigned char* blue  = pixelData;
 			unsigned char* green = pixelData + 1;
 			unsigned char* red   = pixelData + 2;
-			if (((RED_MUL * (int)*red) > (BLUEGREEN_MUL * ((int)*blue + (int)* green))) 
-					& (*red > RED_MIN)) {
-				*red = 255;
+			if (((GREEN_MUL * (int)*green) > (REDBLUE_MUL * ((int)*red + (int)* blue))) 
+					& (*green > GREEN_MIN)) {
+				*green = 255;
 				area = area +1;
 				xMoment = xMoment + x;
 				yMoment = yMoment + y; 
@@ -97,11 +93,11 @@ BallInfo* see() {
 				run++;
 				if (run > diameter)	diameter = run;
 			} else {
-				*red = 0;
+				*green = 0;
 				run = 0;
 			}
+			*red = 0;
 			*blue = 0;
-			*green = 0;
 			pixelData = pixelData + c; 
 		}
 	}
@@ -115,12 +111,15 @@ BallInfo* see() {
 			* blue_pixel = 255;
 			blue_pixel = blue_pixel + c*w;
 		}
-		printf("Ball at (%d, %d)", xPos, yPos);
+		
 		BallInfo* bi = (BallInfo*)malloc(sizeof(BallInfo));
 		bi->found = true;
 		bi->xRads = pixelsToRads(xPos, diameter);
 		bi->dist = calculateDistance(diameter);
 		bi->image = image;
+
+		printf("X: %d, Y: %d, Diam: %d, X rads: %f, Dist: %f\n", xPos, yPos, diameter, bi->xRads, bi->dist);
+		
 		return bi;
 	} else {
 		BallInfo* bi = (BallInfo*)malloc(sizeof(BallInfo));

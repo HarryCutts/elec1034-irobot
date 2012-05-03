@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <QCoreApplication>
 #include "MyCameraWindow.h"
 #include "vision.h"
 
@@ -8,8 +9,13 @@ MyCameraWindow::MyCameraWindow(QWidget *parent) : QWidget(parent) {
     layout->addWidget(cvwidget);
     setLayout(layout);
     resize(500, 400);
-    initVision();
-    startTimer(100);  // 0.1-second timer
+
+	bool lol;
+	QStringList cmdline_args = QCoreApplication::arguments();
+
+    initVision(cmdline_args.at(1).toInt(&lol, 10));
+    
+	startTimer(100);  // 0.1-second timer
 }
 
 #define RED_MIN 128

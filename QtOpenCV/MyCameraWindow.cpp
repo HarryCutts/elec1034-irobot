@@ -12,9 +12,12 @@ MyCameraWindow::MyCameraWindow(QWidget *parent) : QWidget(parent) {
 
 	bool lol;
 	QStringList cmdline_args = QCoreApplication::arguments();
+	
+	if (cmdline_args.count() >= 2)
+    	initVision(cmdline_args.at(1).toInt(&lol, 10));
+    else
+		initVision(41489);
 
-    initVision(cmdline_args.at(1).toInt(&lol, 10));
-    
 	startTimer(100);  // 0.1-second timer
 }
 
@@ -29,7 +32,7 @@ void MyCameraWindow::timerEvent(QTimerEvent*) {
     IplImage* image = getDebugImage(bi);
     cvwidget->putImage(image);
     if (ballFound(bi)) {
-        fprintf(stderr, "Ball found.\t%f x radians,\t%f metres away.\n", getXRadians(bi), getBallDistance(bi));
+//        fprintf(stderr, "Ball found.\t%f x radians,\t%f metres away.\n", getXRadians(bi), getBallDistance(bi));
     }
 }
 

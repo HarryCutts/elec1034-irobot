@@ -14,14 +14,13 @@
 #define DEVICE "/dev/ttyUSB0"
 #define DRIVE (s16)137
 #define DRIVE_DIRECT (s16)145
-#define DELAY 10 
+#define DELAY 1
 
 /**
  * "Dummy" main function to test robot-comms with until vision & control are ready
  */
 s32 main(){
 	if (initRobotComms() == 0) {
-		initSerialPort();
 		serialRun();
 		printf("Child about to die\n");
 		return 0;
@@ -59,7 +58,7 @@ s32 initRobotComms(){
 
 	// Pipe successful?
 	assert(pipe(pipefd) == 0);
-	
+
 	assert((cpid = fork()) != -1);
 
 	if (cpid == 0) {
@@ -134,13 +133,16 @@ void initSerialPort(){
 	assert (tcsetattr(ser, TCSANOW, &termsettings) != -1);
 }
 void serialRun() {
+	initSerialPort();
 	u8 nextByte;
 	while(read(pipefd[0],&nextByte,1)>0){
 		assert (write(ser, &nextByte, 1) == 1);
+		assert (tcdrain(ser) != -1);
 		printf("Written a byte\n");
 		delay(DELAY);
 	}
 	close(pipefd[0]);
+	close(ser);
 	return;
 }
 

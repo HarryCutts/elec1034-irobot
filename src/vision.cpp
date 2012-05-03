@@ -30,7 +30,7 @@ static int GREEN_MIN = 128;
 static int GREEN_MUL = 4;
 static int REDBLUE_MUL = 3;
 static int AREA_MIN = 4000;
-static int DIST_PIX_RATIO = 22;
+static int DIST_PIX_RATIO = 41489;
 static int DIAMETER = 56; /**< Diameter of ball in mm. >*/
 static int IMAGE_WIDTH = 800;
 
@@ -57,9 +57,12 @@ static double calculateDistance(int diamPixels) {
  */
 static double pixelsToRads(int pixels, int diamPixels) {
 	int relativePixels = pixels - (IMAGE_WIDTH / 2);
-	double length = relativePixels * (DIAMETER / (double)diamPixels);
-	
-	return asin(length/calculateDistance(diamPixels));
+	double length = fabs( relativePixels * (DIAMETER / (double)diamPixels) );
+
+	if (relativePixels >= 0)
+		return 0.677 * asin(length/calculateDistance(diamPixels));
+	else
+		return -0.677 * asin(length/calculateDistance(diamPixels));
 }
 
 BallInfo* see() {

@@ -16,30 +16,34 @@
 #define DRIVE_DIRECT (s16)145
 #define DELAY 1
 
+static void delay(s32);
+static void initSerialPort(void);
+static void serialRun(void);
+static void sendMotorCommand(u8 command, s16 param1, s16 param2);
+
+#ifdef ROBOT_COMMS_DEBUG
+
 /**
  * "Dummy" main function to test robot-comms with until vision & control are ready
  */
-s32 main(){
-	if (initRobotComms() == 0) {
-		serialRun();
-		printf("Child about to die\n");
-		return 0;
-	} else {
-		/*camera stuff*/
-		printf("Parent about to begin commands\n");
-		setMotorSpeeds(250, 250);
-		delay(1000);
-		setMotorSpeeds(250, -250);
-		delay(1000);
-		setRobotCourse(250, 100);
-		delay(1000);
-		setMotorSpeeds(0, 0);
-		printf("Parent finished - killing child\n");
-		endChild();
-		printf("Parent Dead\n");
-		return 0;
-	}
+s32 main(void){
+	initRobotComms();
+	/*camera stuff*/
+	printf("Parent about to begin commands\n");
+	setMotorSpeeds(250, 250);
+	delay(1000);
+	setMotorSpeeds(250, -250);
+	delay(1000);
+	setRobotCourse(250, 100);
+	delay(1000);
+	setMotorSpeeds(0, 0);
+	printf("Parent finished - killing child\n");
+	disposeRobotComms();
+	printf("Parent Dead\n");
+	return 0;
 }
+
+#endif
 
 /**
  * File descriptors.
@@ -53,7 +57,7 @@ static s32 pipefd[2];
  * -close the relevant ends of the pipe
  * -tell the caller whether the process is a child (returns zero) or parent (returns non-zero)
  */
-s32 initRobotComms(){
+void initRobotComms(void){
 	pid_t cpid;
 
 	// Pipe successful?
@@ -63,10 +67,11 @@ s32 initRobotComms(){
 
 	if (cpid == 0) {
 		close(pipefd[1]); // Close write end.
+		serialRun();
+		exit(EXIT_SUCCESS);
 	} else {
 		close(pipefd[0]); // Close read end.
 	}
-	return cpid;
 }
 //Sets motor speeds to given values
 void setMotorSpeeds(s16 right, s16 left){
@@ -103,7 +108,7 @@ static void sendMotorCommand(u8 command, s16 param1, s16 param2){
 	printf("written command 5\n");
 }
 
-void endChild(){
+void disposeRobotComms(void){
 	close(pipefd[1]);
 	wait();
 }
@@ -119,7 +124,7 @@ static void delay(s32 ms){
 	nanosleep(&t, NULL);
 }
 
-void initSerialPort(){
+static void initSerialPort(void){
 	//open the serial port
 	ser = open(DEVICE, O_RDWR);
 	assert (ser != -1);
@@ -132,7 +137,8 @@ void initSerialPort(){
 	cfmakeraw(&termsettings);
 	assert (tcsetattr(ser, TCSANOW, &termsettings) != -1);
 }
-void serialRun() {
+
+static void serialRun(void) {
 	initSerialPort();
 	u8 nextByte;
 	while(read(pipefd[0],&nextByte,1)>0){

@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <math.h>
 #include "robot-comms.h"
 #include "vision.h"
@@ -7,7 +8,7 @@
 
 // All of these constants are in mm or mm/s
 #define	STOPPING_THRESHOLD		200
-#define NAVIGATING_SPEED		100
+#define NAVIGATING_SPEED		200
 #define SEARCHING_SPEED			NAVIGATING_SPEED
 #define INITIAL_SEARCH_RADIUS	100
 #define SEARCH_RADIUS_INC		50
@@ -45,14 +46,16 @@ static void finish() {
 int main(void) {
 	initVision();
 	initRobotComms();
-	state = SEARCHING;
+	search();
 	while (true) {
 		BallInfo* bi = see();
 		switch (state) {
 			case SEARCHING:
 				if (ballFound(bi)) {
+					printf("Ball found. Changing to Navigate mode.\n");
 					navigate();
 				} else {
+					printf("Searching... (%d mm radius)\n", searchRadius);
 					searchRadius += SEARCH_RADIUS_INC;
 					setRobotCourse(SEARCHING_SPEED, searchRadius);
 				}
@@ -60,20 +63,25 @@ int main(void) {
 
 			case NAVIGATING:
 				if (ballFound(bi)) {
+					printf("Navigating... ");
 					if (getBallDistance(bi) < STOPPING_THRESHOLD) {
+						printf("Ball within stopping threshold.\n");
 						setMotorSpeeds(0, 0);
 						finish();
 					} else {
 						double theta = getXRadians(bi);
 						double radius = -getBallDistance(bi) * sin(M_PI - theta)
 								/ sin(2 * theta);
-						setRobotCourse(NAVIGATING_SPEED, radius);
+						printf("(theta = %f, radius = %f)\n", theta, radius);
+						setRobotCourse(NAVIGATING_SPEED, (int)radius);
 					}
 				} else {
+					printf("Ball lost. Changing to Search mode.\n");
 					search();
 				}
 				break;
 			case FINISHED:
+				printf("<insert victory dance here>\n");
 				return EXIT_SUCCESS;
 				break;
 		}

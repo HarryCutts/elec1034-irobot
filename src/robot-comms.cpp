@@ -14,7 +14,9 @@
 #define DEVICE "/dev/ttyUSB0"
 #define DRIVE (s16)137
 #define DRIVE_DIRECT (s16)145
-#define DELAY 1
+#define START_OI (s16)128
+#define SAFE_MODE (s16)131
+#define DELAY 10
 
 static void delay(s32);
 static void initSerialPort(void);
@@ -71,6 +73,9 @@ void initRobotComms(void){
 		exit(EXIT_SUCCESS);
 	} else {
 		close(pipefd[0]); // Close read end.
+		s16 resetRobot =START_OI,robotMode=SAFE_MODE;
+		write(pipefd[1],&resetRobot,1);
+		write(pipefd[1],&robotMode,1);
 	}
 }
 //Sets motor speeds to given values

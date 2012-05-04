@@ -43,6 +43,8 @@ static void finish() {
 }
 
 int main(void) {
+	initVision();
+	initRobotComms();
 	state = SEARCHING;
 	while (true) {
 		BallInfo* bi = see();

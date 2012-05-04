@@ -31,7 +31,6 @@ static void sendMotorCommand(u8 command, s16 param1, s16 param2);
 s32 main(void){
 	initRobotComms();
 	/*camera stuff*/
-	printf("Parent about to begin commands\n");
 	setMotorSpeeds(250, 250);
 	delay(1000);
 	setMotorSpeeds(250, -250);
@@ -39,9 +38,7 @@ s32 main(void){
 	setRobotCourse(250, 100);
 	delay(1000);
 	setMotorSpeeds(0, 0);
-	printf("Parent finished - killing child\n");
 	disposeRobotComms();
-	printf("Parent Dead\n");
 	return 0;
 }
 
@@ -102,15 +99,10 @@ static void sendMotorCommand(u8 command, s16 param1, s16 param2){
 	param2High=(u8)(param2 >> 8);
 
 	write(pipefd[1],&command,1);
-	printf("written command 1\n");
 	write(pipefd[1],&param1High,1);
-	printf("written command 2\n");
 	write(pipefd[1],&param1Low,1);
-	printf("written command 3\n");
 	write(pipefd[1],&param2High,1);
-	printf("written command 4\n");
 	write(pipefd[1],&param2Low,1);
-	printf("written command 5\n");
 }
 
 void disposeRobotComms(void){
@@ -149,14 +141,9 @@ static void serialRun(void) {
 	while(read(pipefd[0],&nextByte,1)>0){
 		assert (write(ser, &nextByte, 1) == 1);
 		assert (tcdrain(ser) != -1);
-		printf("Written a byte\n");
 		delay(DELAY);
 	}
 	close(pipefd[0]);
 	close(ser);
 	return;
 }
-
-
-
-

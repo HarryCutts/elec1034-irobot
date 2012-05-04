@@ -38,10 +38,9 @@ static int DIST_PIX_RATIO = 41489;
 static int DIAMETER = 56; /**< Diameter of ball in mm. >*/
 static int IMAGE_WIDTH = 800;
 
-void initVision(int dist_pix_ratio) {
+void initVision(void) {
 	camera = cvCreateCameraCapture(0);
 	assert(camera != NULL);
-	DIST_PIX_RATIO = dist_pix_ratio;
 	visionInitialised = true;
 }
 

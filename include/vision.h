@@ -11,7 +11,7 @@ struct BallInfo_s;
 typedef BallInfo_s BallInfo;
 
 /** Starts the vision system. Must be called before the vision system is used. */
-void initVision(int dist_pix_ratio);
+void initVision(void);
 
 /** Releases resources in use by the vision system. Should be called when the vision system 
  * is no longer required. */

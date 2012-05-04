@@ -14,4 +14,4 @@ vision-with-main:
 
 
 robot-comms:
-	g++ -Iinclude -o bin/robot-comms -D ROBOT_COMMS_DEBUG  src/robot-comms.cpp
+	g++ -Iinclude -o bin/robot-comms -D ROBOT_COMMS_DEBUG src/robot-comms.cpp

@@ -1,7 +1,8 @@
 all:
 	g++ -c -Iinclude -o obj/libvision.a		src/vision.cpp
 	g++ -c -Iinclude -o obj/librobot-comms.a	src/robot-comms.cpp
-	g++ -Wl -o bin/control obj/libvision.a obj/librobot-comms.a -L/usr/lib -lcv -lhighgui
+	g++ -c -Iinclude -o obj/control.a		src/control.cpp
+	g++ -Wl -o bin/control obj/control.a obj/libvision.a obj/librobot-comms.a -L/usr/lib -lcv -lhighgui
 
 vision:
 	g++ -c -Iinclude -o obj/libvision.a src/vision.cpp

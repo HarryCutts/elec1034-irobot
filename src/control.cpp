@@ -7,18 +7,16 @@
 
 // All of these constants are in mm or mm/s
 #define	STOPPING_THRESHOLD		200
-#define DRIVING_SPEED			100
-#define SEARCHING_SPEED			DRIVING_SPEED
+#define NAVIGATING_SPEED		100
+#define SEARCHING_SPEED			NAVIGATING_SPEED
 #define INITIAL_SEARCH_RADIUS	100
 #define SEARCH_RADIUS_INC		50
 
-enum StrategyState_e {
+typedef enum {
 	NAVIGATING,
 	SEARCHING,
 	FINISHED
-}
-
-typedef enum StrategyState_e StrategyState;
+} StrategyState;
 
 static StrategyState state;
 static s16 searchRadius;
@@ -65,7 +63,7 @@ int main(void) {
 						finish();
 					} else {
 						double theta = getXRadians(bi);
-						double radius = getBallDistance(bi) * sin(PI / 2 - theta)
+						double radius = -getBallDistance(bi) * sin(M_PI - theta)
 								/ sin(2 * theta);
 						setRobotCourse(NAVIGATING_SPEED, radius);
 					}

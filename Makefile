@@ -7,5 +7,10 @@ vision:
 	g++ -c -Iinclude -o obj/libvision.a src/vision.cpp
 	g++ -Wl -o bin/vision obj/libvision.a -L/usr/lib -lcv -lhighgui
 
+vision-with-main:
+	g++ -c -Iinclude -o obj/libvision.a -D VISION_DEBUG  src/vision.cpp
+	g++ -Wl -o bin/vision obj/libvision.a -L/usr/lib -lcv -lhighgui
+
+
 robot-comms:
 	g++ -Iinclude -o bin/robot-comms -D ROBOT_COMMS_DEBUG  src/robot-comms.cpp

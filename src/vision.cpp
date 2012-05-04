@@ -4,7 +4,9 @@
 #include <stdio.h>
 #include <math.h>
 
-/*int main() {
+#ifdef VISION_DEBUG
+
+int main() {
 	initVision();
 
 	while (true) {
@@ -14,7 +16,9 @@
 			printf("X rads: %f, Distance: %f\n", getXRadians(bi),
 												 getBallDistance(bi));
 	}
-}*/
+}
+
+#endif
 
 struct BallInfo_s {
 	bool found;

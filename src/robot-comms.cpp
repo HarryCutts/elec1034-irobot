@@ -1,6 +1,7 @@
 #include "robot-comms.h"
 #include "type.h"
 
+#include <signal.h>
 #include <stdlib.h>
 #include <fcntl.h>
 #include <termios.h>
@@ -50,6 +51,12 @@ s32 main(void){
 static s32 ser;
 static s32 pipefd[2];
 
+void sigproc(int signal) {
+	printf("Exit requested. Stopping.\n");
+	setMotorSpeeds(0, 0);
+	exit(EXIT_SUCCESS);
+}
+
 /**
  * Called after a fork to
  * -determine whether the process is child or parent
@@ -58,6 +65,8 @@ static s32 pipefd[2];
  */
 void initRobotComms(void){
 	pid_t cpid;
+
+	signal(SIGINT, &sigproc);
 
 	// Pipe successful?
 	assert(pipe(pipefd) == 0);

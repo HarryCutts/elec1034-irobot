@@ -11,7 +11,7 @@
 #define STRAIGHT_AHEAD_THRESHOLD	0.2
 
 // All of these constants are in mm or mm/s
-#define	STOPPING_THRESHOLD		400
+#define	STOPPING_THRESHOLD		500
 #define NAVIGATING_SPEED		200
 #define SEARCHING_SPEED			NAVIGATING_SPEED
 #define INITIAL_SEARCH_RADIUS	100
@@ -69,7 +69,7 @@ int main(void) {
 		BallInfo* bi = see();
 		switch (state) {
 			case SEARCHING:
-				if (ballFound(bi)) {
+				if (ballFound(bi) && getXRadians(bi) > -STRAIGHT_AHEAD_THRESHOLD) {
 					printf("Ball found. Changing to Navigate mode.\n");
 					navigate();
 				} else {
@@ -79,6 +79,7 @@ int main(void) {
 							difftime(now, lastSearchTick);
 					lastSearchTick = now;
 					setRobotCourse(SEARCHING_SPEED, searchRadius);
+					//setMotorSpeeds(-50, 50);
 				}
 				break;
 

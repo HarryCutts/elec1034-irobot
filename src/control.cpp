@@ -47,6 +47,7 @@ static void handleSensorData(SensorData sd) {
 	bool bumped = getLeftBump(sd) || getRightBump(sd);
 
 	if (bumped) {
+		printf("Bumped. Reversing, spinning and changing to search.\n");
 		setMotorSpeeds(-500, -500);
 		delay(60);
 		setMotorSpeeds(-500, 500);
@@ -60,9 +61,12 @@ int main(void) {
 	initRobotComms();
 	search();
 	while (true) {
+		printf("Requesting sensor data...\n");
 		requestSensorData();
+		printf("Calling see()...\n");
 		BallInfo* bi = see();
 		SensorData sd = retrieveSensorData();
+		printf("Retrieved sensor data.\n");
 		handleSensorData(sd);
 
 		switch (state) {
@@ -101,6 +105,7 @@ int main(void) {
 				return EXIT_SUCCESS;
 				break;
 		}
+		free(bi);
 		delay(TICK_INTERVAL);
 	}
 }

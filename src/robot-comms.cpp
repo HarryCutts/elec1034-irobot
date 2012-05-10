@@ -21,14 +21,17 @@
 #define SAFE_MODE (u8)131
 #define FULL_MODE (u8)132
 #define ROBOT_START_MODE SAFE_MODE
-#define DELAY 10 //ensures that bytes are not sent too frequently. Specifically, reads from robot sensors must not occur more often than every 15ms (but this requires 2 bytes sent, i.e. 2*10ms > 15ms, so delay=10 is okay)
+#define DELAY 10
+/*ensures that bytes are not sent too frequently. Specifically, reads from robot
+sensors must not occur more often than every 15ms (but this requires 2 bytes
+sent, i.e. 2*10ms > 15ms, so delay=10 is okay) */
 
 // Sensor Constants //
 #define SENSOR_BUMP_RIGHT	0b00001
 #define SENSOR_BUMP_LEFT	0b00010
-#define SENSOR_RIGHT_DROP	0b00100
-#define SENSOR_LEFT_DROP	0b01000
-#define SENSOR_CASTOR_DROP	0b10000
+#define SENSOR_DROP_RIGHT	0b00100
+#define SENSOR_DROP_LEFT	0b01000
+#define SENSOR_DROP_CASTOR	0b10000
 
 static void delay(s32);
 static void initSerialPort(void);
@@ -120,36 +123,31 @@ void requestSensorData(void){
 	write(pipeToRobotfd[1],&packetNo,1);
 }
 
-/*retrieve the requested sensor data from the robot. requestSensorData must have been called first, with no other motor
-functions in between. This function is blocking but will take less time the longer ago that requestSensorData was called -
-therefore, I suggest doing any processing in between these functions.            
-Data is a byte, with bits 4:0 containing castor wheeldrop, left wheeldrop, right wheeldrop, bump left, bump right, respectively*/
-
 //retrieves the sensor packet from the child; blocking
 SensorData retrieveSensorData(void){
-	u8 sensorData;
+	SensorData sensorData = 0;
 	assert(read(pipeFromRobotfd[0],&sensorData,1)>0);
 	return sensorData;
 }
 
 bool getCastorWheeldrop(SensorData d) {
-	return (d & SENSOR_CASTOR_DROP) > 0;
+	return (d & SENSOR_DROP_CASTOR) > 0;
 }
 
 bool getLeftWheeldrop(SensorData d) {
-	return (d & SENSOR_LEFT_DROP) > 0;
+	return (d & SENSOR_DROP_LEFT) > 0;
 }
 
 bool getRightWheeldrop(SensorData d) {
-	return (d & SENSOR_RIGHT_DROP) > 0;
+	return (d & SENSOR_DROP_RIGHT) > 0;
 }
 
 bool getLeftBump(SensorData d) {
-	return (d & SENSOR_LEFT_BUMP) > 0;
+	return (d & SENSOR_BUMP_LEFT) > 0;
 }
 
 bool getRightBump(SensorData d) {
-	return (d & SENSOR_RIGHT_BUMP) > 0;
+	return (d & SENSOR_BUMP_RIGHT) > 0;
 }
 
 /**
@@ -226,7 +224,7 @@ static void serialRun(void) {
 		if ((readyToReadFromRobot == 1)&&(byteToRobot == SENSOR_BUMP_DROP)) {
 			readyToReadFromRobot = 2;
 		}
-		sendbyte(byteToRobot);
+		sendByte(byteToRobot);
 		//see if there is a byte from the robot
 		if (readyToReadFromRobot == 2) {
 			assert(read(ser,&byteFromRobot,1)>0);

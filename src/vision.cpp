@@ -47,7 +47,7 @@ void initVision(void) {
 void disposeVision() {
 	cvReleaseCapture(&camera);
 	camera = NULL;
-	visionInitialised = true;
+	visionInitialised = false;
 }
 
 static double calculateDistance(int diamPixels) {
@@ -104,9 +104,13 @@ BallInfo* see() {
 			}
 			*red = 0;
 			*blue = 0;
-			pixelData = pixelData + c; 
+			pixelData = pixelData + c;
 		}
 	}
+
+	BallInfo* bi = (BallInfo*)malloc(sizeof(BallInfo));
+	assert(bi != NULL);
+
 	if (area > AREA_MIN) {
 		// ball found
 		int xPos = xMoment/area;
@@ -118,7 +122,6 @@ BallInfo* see() {
 			blue_pixel = blue_pixel + c*w;
 		}
 		
-		BallInfo* bi = (BallInfo*)malloc(sizeof(BallInfo));
 		bi->found = true;
 		bi->xRads = pixelsToRads(xPos, diameter);
 		bi->dist = calculateDistance(diameter);
@@ -126,13 +129,13 @@ BallInfo* see() {
 
 		printf("X: %d, Y: %d, Diam: %d, X rads: %f, Dist: %f\n", xPos, yPos, diameter, bi->xRads, bi->dist);
 		
-		return bi;
 	} else {
-		BallInfo* bi = (BallInfo*)malloc(sizeof(BallInfo));
 		bi->found = false;
 		bi->image = image;
-		return bi;
 	}
+	
+	printf("Returning.\n");
+	return bi;
 }
 
 // Accessor methods //

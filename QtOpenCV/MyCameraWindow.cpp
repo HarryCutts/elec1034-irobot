@@ -10,13 +10,7 @@ MyCameraWindow::MyCameraWindow(QWidget *parent) : QWidget(parent) {
     setLayout(layout);
     resize(500, 400);
 
-	bool lol;
-	QStringList cmdline_args = QCoreApplication::arguments();
-	
-	if (cmdline_args.count() >= 2)
-    	initVision(cmdline_args.at(1).toInt(&lol, 10));
-    else
-		initVision(41489);
+	initVision();
 
 	startTimer(100);  // 0.1-second timer
 }

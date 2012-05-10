@@ -2,6 +2,14 @@
 
 #include "type.h"
 
+// Module Methods //
+
+void initRobotComms(void);
+
+void disposeRobotComms(void);
+
+// Motor Output //
+
 /** Sets the motor speeds to the given values. 
  * @param left	The speed of the left motor, in mm/s. 
  * @param right	The speed of the right motor, in mm/s. */
@@ -12,14 +20,27 @@ void setMotorSpeeds(s16 right, s16 left);
  * @param radius	The radius of the circle in mms. */
 void setRobotCourse(s16 velocity, s16 radius);
 
-void initRobotComms(void);
+// Sensor Input //
 
-//call this to request bump and wheel drop data from the robot. getSensorData MUST be the next motor function called
-void setSensorData(void);
-/*retrieve the requested sensor data from the robot. setSensorData must have been called first, with no other motor
-functions in between. This function is blocking but will take less time the longer ago that setSensorData was called -
-therefore, I suggest doing any processing in between these functions.
-Data is a byte, with bits 4:0 containing caster wheeldrop, left wheeldrop, right wheeldrop, bump left, bump right, respectively*/
-u8 getSensorData(void);
+typedef u8 SensorData;
 
-void disposeRobotComms(void);
+/** Starts an asynchronous request for sensor data to the robot. */
+void requestSensorData(void);
+
+/** Retrieve the requested sensor data from the robot. The last robot comms call
+ * must have been requestSensorData for the call to work.
+ * 
+ * This function will block until the sensor data is received, and will be
+ * quicker if the time since requestSensorData is longer.
+ * @return A SensorData value containing the sensor readings. */
+SensorData retrieveSensorData(void);
+
+bool getCastorWheeldrop(SensorData d);
+
+bool getLeftWheeldrop(SensorData d);
+
+bool getRightWheeldrop(SensorData d);
+
+bool getLeftBump(SensorData d);
+
+bool getRightBump(SensorData d);

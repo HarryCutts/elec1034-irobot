@@ -43,12 +43,28 @@ static void finish() {
 	state = FINISHED;
 }
 
+static void handleSensorData(SensorData sd) {
+	bool bumped = getLeftBump(sd) || getRightBump(sd);
+
+	if (bumped) {
+		setMotorSpeeds(-500, -500);
+		delay(60);
+		setMotorSpeeds(-500, 500);
+		delay(10);
+		search();
+	}
+}
+
 int main(void) {
 	initVision();
 	initRobotComms();
 	search();
 	while (true) {
+		requestSensorData();
 		BallInfo* bi = see();
+		SensorData sd = retrieveSensorData();
+		handleSensorData(sd);
+
 		switch (state) {
 			case SEARCHING:
 				if (ballFound(bi)) {

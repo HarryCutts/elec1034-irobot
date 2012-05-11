@@ -20,6 +20,7 @@ int main() {
 
 #endif
 
+/** Contains the results of the see() method. */
 struct BallInfo_s {
 	bool found;
 	double xRads;
@@ -30,19 +31,19 @@ struct BallInfo_s {
 static bool visionInitialised = false;
 static CvCapture* camera;
 
-static int GREEN_MIN = 128;
+static int GREEN_MIN = 128;	///< Minimum green value for a pixel to match
 static int GREEN_MUL = 4;
 static int REDBLUE_MUL = 3;
-static int AREA_MIN = 1000;
+static int AREA_MIN = 500;	///< Minimum number of matched pixels for ball recognition
 static int DIST_PIX_RATIO = 41489;
-static int DIAMETER = 56; /**< Diameter of ball in mm. >*/
+static int DIAMETER = 56;	///< Diameter of ball in mm
 
-static void delay(int ms) {                                                      
-    struct timespec t;                                                           
-    t.tv_sec = ms/1000;                                                          
-    t.tv_nsec = (long)(ms%1000 * 1000000);                                       
-    nanosleep(&t, NULL);                                                         
-} 
+static void delay(int ms) {                          
+    struct timespec t;
+    t.tv_sec = ms/1000;
+    t.tv_nsec = (long)(ms%1000 * 1000000);
+    nanosleep(&t, NULL);
+}
 
 void initVision(void) {
 	camera = cvCreateCameraCapture(0);
@@ -65,10 +66,8 @@ static double calculateDistance(int diamPixels) {
 	return DIST_PIX_RATIO / (float) diamPixels;
 }
 
-/**
- * @returns Radians from normal based upon pixels from centre of image as a 
- * signed int.
- */
+/** @returns Radians from normal based upon pixels from centre of image as a
+ * signed int. */
 static double pixelsToRads(int pixels, int diamPixels, int imageWidth) {
 	int relativePixels = pixels - (imageWidth / 2);
 	double length = fabs( relativePixels * (DIAMETER / (double)diamPixels) );

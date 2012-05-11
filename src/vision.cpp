@@ -36,7 +36,6 @@ static int REDBLUE_MUL = 3;
 static int AREA_MIN = 1000;
 static int DIST_PIX_RATIO = 41489;
 static int DIAMETER = 56; /**< Diameter of ball in mm. >*/
-static int IMAGE_WIDTH = 800;
 
 static void delay(int ms) {                                                      
     struct timespec t;                                                           
@@ -70,14 +69,14 @@ static double calculateDistance(int diamPixels) {
  * @returns Radians from normal based upon pixels from centre of image as a 
  * signed int.
  */
-static double pixelsToRads(int pixels, int diamPixels) {
-	int relativePixels = pixels - (IMAGE_WIDTH / 2);
+static double pixelsToRads(int pixels, int diamPixels, int imageWidth) {
+	int relativePixels = pixels - (imageWidth / 2);
 	double length = fabs( relativePixels * (DIAMETER / (double)diamPixels) );
 
 	if (relativePixels >= 0)
-		return 0.677 * asin(length/calculateDistance(diamPixels));
+		return 1 * asin(length/calculateDistance(diamPixels));
 	else
-		return -0.677 * asin(length/calculateDistance(diamPixels));
+		return -1 * asin(length/calculateDistance(diamPixels));
 }
 
 BallInfo* see() {
@@ -135,7 +134,7 @@ BallInfo* see() {
 		}
 		
 		bi->found = true;
-		bi->xRads = pixelsToRads(xPos, diameter);
+		bi->xRads = pixelsToRads(xPos, diameter, w);
 		bi->dist = calculateDistance(diameter);
 		bi->image = image;
 

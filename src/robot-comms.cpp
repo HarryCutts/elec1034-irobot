@@ -1,7 +1,6 @@
 #include "robot-comms.h"
 #include "type.h"
 
-#include <signal.h>
 #include <stdlib.h>
 #include <fcntl.h>
 #include <termios.h>
@@ -15,7 +14,7 @@
 #define DEVICE "/dev/ttyUSB0"
 #define DRIVE (u8)137
 #define DRIVE_DIRECT (u8)145
-#define GET_SENSOR (u8)145
+#define GET_SENSOR (u8)142
 #define SENSOR_BUMP_DROP (u8)7
 #define START_OI (u8)128
 #define SAFE_MODE (u8)131
@@ -66,12 +65,6 @@ static s32 ser;
 static s32 pipeToRobotfd[2];
 static s32 pipeFromRobotfd[2];
 
-void sigproc(int signal) {
-	printf("Exit requested. Stopping.\n");
-	setMotorSpeeds(0, 0);
-	exit(EXIT_SUCCESS);
-}
-
 /**
  * Called after a fork to
  * -determine whether the process is child or parent
@@ -80,8 +73,6 @@ void sigproc(int signal) {
  */
 void initRobotComms(void){
 	pid_t cpid;
-
-	signal(SIGINT, &sigproc);
 
 	// Pipe successful?
 	assert(pipe(pipeToRobotfd) == 0);

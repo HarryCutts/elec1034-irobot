@@ -12,6 +12,8 @@
 #include <assert.h>
 
 #define DEVICE "/dev/ttyUSB0"
+
+// Command constants.
 #define DRIVE (u8)137
 #define DRIVE_DIRECT (u8)145
 #define GET_SENSOR (u8)142
@@ -40,7 +42,7 @@ static void sendMotorCommand(u8 command, s16 param1, s16 param2);
 #ifdef ROBOT_COMMS_DEBUG
 
 /**
- * "Dummy" main function to test robot-comms with until vision & control are ready
+ * "Dummy" main function to test robot-comms with until vision & control are ready. No longer important.
  */
 s32 main(void){
 	initRobotComms();
@@ -62,11 +64,12 @@ s32 main(void){
  * File descriptors.
  */
 static s32 ser;
-static s32 pipeToRobotfd[2];
-static s32 pipeFromRobotfd[2];
+static s32 pipeToRobotfd[2]; // Parent to child.
+static s32 pipeFromRobotfd[2]; // Child to parent.
 
 /**
- * Called after a fork to
+ * Called to
+ * -fork
  * -determine whether the process is child or parent
  * -close the relevant ends of the pipe
  * -tell the caller whether the process is a child (returns zero) or parent (returns non-zero)
@@ -84,18 +87,19 @@ void initRobotComms(void){
 		//we are the child
 		close(pipeToRobotfd[1]); // Close write end of pipe we read from.
 		close(pipeFromRobotfd[0]); // Close read end of pipe we write to.
-		serialRun();
+		serialRun(); // Child program.
 		exit(EXIT_SUCCESS);
 	} else {
 		//we are the parent
 		close(pipeToRobotfd[0]); // Close read end of pipe we write to.
 		close(pipeFromRobotfd[1]); // Close write end of pipe we read from.
 		//put the robot into the right mode
-		s16 resetRobot =START_OI,robotMode=ROBOT_START_MODE;
+		s16 resetRobot = START_OI, robotMode = ROBOT_START_MODE;
 		write(pipeToRobotfd[1],&resetRobot,1);
 		write(pipeToRobotfd[1],&robotMode,1);
 	}
 }
+
 //Sets motor speeds to given values
 void setMotorSpeeds(s16 right, s16 left){
 	sendMotorCommand(DRIVE_DIRECT,right,left);	
@@ -121,6 +125,7 @@ SensorData retrieveSensorData(void){
 	return sensorData;
 }
 
+// 'Accessor' methods to return a boolean from a SensorData.
 bool getCastorWheeldrop(SensorData d) {
 	return (d & SENSOR_DROP_CASTOR) > 0;
 }
@@ -154,6 +159,7 @@ static void sendMotorCommand(u8 command, s16 param1, s16 param2){
 	param1High=(u8)(param1 >> 8);
 	param2High=(u8)(param2 >> 8);
 
+	// send to robot.
 	write(pipeToRobotfd[1],&command,1);
 	write(pipeToRobotfd[1],&param1High,1);
 	write(pipeToRobotfd[1],&param1Low,1);
@@ -161,15 +167,17 @@ static void sendMotorCommand(u8 command, s16 param1, s16 param2){
 	write(pipeToRobotfd[1],&param2Low,1);
 }
 
+// Tidies up when we want to close robot comms.
 void disposeRobotComms(void){
 	close(pipeToRobotfd[1]);
 	wait();
 }
 
 /**
- * Child program.
+ * Child program stuff follows.
  */
 
+// Delays for `ms` milliseconds.
 static void delay(s32 ms){
 	struct timespec t;
 	t.tv_sec = ms / 1000;
@@ -177,6 +185,7 @@ static void delay(s32 ms){
 	nanosleep(&t, NULL);
 }
 
+// sets up serial port for I/O.
 static void initSerialPort(void){
 	//open the serial port
 	ser = open(DEVICE, O_RDWR);
@@ -184,18 +193,29 @@ static void initSerialPort(void){
 
 	//tty_init - without errors
 	struct termios termsettings;
+	
+	// Get settings.
 	assert (tcgetattr(ser, &termsettings) != -1);
+	
+	// Set I/O speeds.
 	assert (cfsetispeed(&termsettings, B57600) != -1);
 	assert (cfsetospeed(&termsettings, B57600) != -1);
+	
+	// Set settings.
 	cfmakeraw(&termsettings);
 	assert (tcsetattr(ser, TCSANOW, &termsettings) != -1);
 }
+
 //sends a byte on the serial port
 static void sendByte(u8 byte) {
 	assert (write(ser, &byte, 1) == 1);
+	
+	// flush.
 	assert (tcdrain(ser) != -1);
 	delay(DELAY);
 }
+
+// Actual child process's executed code.
 static void serialRun(void) {
 	//set up the serial port
 	initSerialPort();
@@ -207,8 +227,11 @@ static void serialRun(void) {
 	u8 byteFromRobot;
 	//this is 0 normally, gets set to 1 with a GET_SENSOR and gets set to 2 with a subsequent SENSOR_BUMP_DROP; when it is 2, we know we have to read from the robot.
 	u8 readyToReadFromRobot = 0;
+	
+	// block until we have some data from the parent, keep looping.
 	while ((read(pipeToRobotfd[0],&byteToRobot,1)>0)){
 		//read a byte from the pipe; it will return 0 at eof so we know we can quit
+		// Set robot reading flag as appropriate.
 		if (byteToRobot == GET_SENSOR) {
 			readyToReadFromRobot = 1;
 		}
@@ -224,7 +247,7 @@ static void serialRun(void) {
 		}
 	}
 
-
+	// Child is done, tidy up.
 	close(pipeToRobotfd[0]);
 	close(ser);
 	return;

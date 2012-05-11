@@ -33,15 +33,27 @@ static CvCapture* camera;
 static int GREEN_MIN = 128;
 static int GREEN_MUL = 4;
 static int REDBLUE_MUL = 3;
-static int AREA_MIN = 4000;
+static int AREA_MIN = 1000;
 static int DIST_PIX_RATIO = 41489;
 static int DIAMETER = 56; /**< Diameter of ball in mm. >*/
 static int IMAGE_WIDTH = 800;
+
+static void delay(int ms) {                                                      
+    struct timespec t;                                                           
+    t.tv_sec = ms/1000;                                                          
+    t.tv_nsec = (long)(ms%1000 * 1000000);                                       
+    nanosleep(&t, NULL);                                                         
+} 
 
 void initVision(void) {
 	camera = cvCreateCameraCapture(0);
 	assert(camera != NULL);
 	visionInitialised = true;
+	cvQueryFrame(camera);	// Actually make the webcam start
+	delay(100);
+	cvQueryFrame(camera);
+	delay(100);
+	cvQueryFrame(camera);
 }
 
 void disposeVision() {
